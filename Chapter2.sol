@@ -13,4 +13,22 @@ mapping(uint=> string) useIdToName;
 ・solidityはネイティブで文字列比較ができない。→keccak256でハッシュを比較!! 
 Ex.. require( keccak256(_name) == keccak256("Vital") );
 
+・継承
+// BabyDogeはcatchphraseとanotherCatchphrase両方使える。
+contract Doge(){
+   function catchphrase() public returns (string){
+      return "SO WOW CRYPTODOGE";
+   }
+}
+contract BabyDoge is Doge{
+   function anotherCatchphrase() public returns (string){
+      return "SUCH MOON BABYDOGE";
+      }
+}
+
+・変数の格納場所 .. storage, memory
+storage(HDD) ..チェーン上に永久に格納される変数。状態変数(関数外で宣言された変数)。
+memory(RAM) .. 一時的な変数。外部関数をcontractにcallするときに消去される。(関数内で宣言された変数)
+
+
 
