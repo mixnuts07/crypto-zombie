@@ -6,3 +6,4 @@ ETHのブロックチェーンはアカウント(口座)で構成されている
 mapping(address => uint) public accountBalance; 
 // ユーザIDをもとにユーザ名を参照・格納 key=uint, value=string
 mapping(uint=> string) useIdToName;
+・msg.sender...ユーザのaddressを参照できるG変数。
