@@ -48,6 +48,25 @@ contract Ownable {
 この例で言えば、onlyOwnerはowner(オーナー）だけが関数を実行できるように、制限をアクセスするために使用されているのだ。
 関数修飾子..modefyで宣言
 関数のように直接呼び出すことはできず、代わりに関数定義の最後に修飾子の名前をつけることで、関数の動きを変更
+
+modifier修飾子を関数につけると、修飾された関数を実行する前に、modifierの処理を予め実行させることが可能。
+Ex.
+modifierの基本構文
+modifier modifier名称{
+  modifierの処理部分;
+  _;
+}
+解説
+1行目のmodifierでは、Solidityのmodifierを利用することを宣言します。modifierの名称という部分で、実装するmodifierの名称を定義します。
+{を記載することで、modifierの処理部分を開始したことを定義します。
+
+2行目のmodifierの処理部分では、実際に処理する内容を記載します。処理の最後には;を記載することで、1つの処理が終了したことを表します。
+
+3行目の _; では、処理部分全体が終了したことを意味します。この _; は必ず必要です。
+
+4行目の } では、1行目のmodifier処理定義が終了したことを意味します。
+
+
 Ex.
 modifier onlyOwner() {
   require(msg.sender == owner);
@@ -112,3 +131,20 @@ function _doStuff(Zombie storage _zombie) internal {
   //  _zombieを処理する
 }
 →ゾンビIDを渡して探す代わりに、関数にゾンビの参照そのものを渡すことが可能！！
+
+
+・引数のある関数修飾子
+// ユーザーの年齢を格納するマッピングだ：
+mapping (uint => uint) public age;
+
+// ユーザーの年齢が一定の年齢より高いことを要件とする関数修飾子だ：
+modifier olderThan(uint _age, uint _userId) {
+  require (age[_userId] >= _age);
+  _;
+}
+
+// 車の運転は１６歳以上だな（米国の場合だ。日本は１８歳だな）。
+//  こういう場合に引数のある`olderThan`修飾子を使うのだ。こんな風に書けばいい：
+function driveCar(uint _userId) public olderThan(16, _userId) {
+  // 関数のロジックだ
+}
