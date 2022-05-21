@@ -52,3 +52,18 @@ contract SatoshiNakamoto is NickSzabo, HalFinney {
   // Omg, the secrets of the universe revealed!
 }
 
+
+・ERC７２１規格の２つの異なるトークン移転方法。
+
+function transfer(address _to, uint256 _tokenId) public;
+function approve(address _to, uint256 _tokenId) public;
+function takeOwnership(uint256 _tokenId) public;
+
+一番目の方法はトークン所有者が送り先のaddress、そして送りたいトークンの_tokenIdを送ってtransfer関数を呼び出すものだ。
+
+二番目の方法は、トークン所有者がまずapprove関数を呼び出し、一番目と同じ情報を関数に送る。
+すると、コントラクトが誰がトークン受け取りを許可されたのかを、通常はmapping (uint256 => address)にて記録する。
+さらに誰かがtakeOwnershipを呼び出すと、コントラクトはそのmsg.senderがトークンを受け取ることを所有者から承認されているかをチェックし、承認済みの場合は彼にトークンを移転する。
+
+transferとtakeOwnershipのどちらも同じ転送ロジックを含むことに気付くことになるだろうが、順序が逆になる
+。（ひとつはトークンの送り手が関数を呼び出すケース、もうひとつはトークンの受け手が関数を呼び出すケース）。
