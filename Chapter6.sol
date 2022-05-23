@@ -154,7 +154,7 @@ SolidityコンパイラはABIを提供してくれるので、コントラクト
 web3.jsでコントラクトの関数を呼び出すための２つのメソッドがある。（call, send）
 
 
-// Call
+// Call (データの取得？get?)
 callはview関数およびpure関数に使われる。
 これはローカルのノードでのみ機能し、ブロックチェーン上のトランザクションを生成しない。
 
@@ -166,7 +166,7 @@ Web3.jsを使って、次のように123をパラメーターにしてmyMethod�
 myContract.methods.myMethod(123).call()
 
 
-// Send
+// Send (スマートコントラクト上のデータを変更)
 sendはトランザクションを生成し、ブロックチェーン上のデータを変更する。
 viewまたはpureではない関数には、sendを使う必要がある。
 
@@ -213,4 +213,79 @@ result は次のようなJavaScriptオブジェクトとなる:
 }
 このオブジェクトを解析してフロントエンドロジックを用意すると、意味がわかるようにフロントエンドに表示することができる。
 
+
+・データの表示（JQuery）
+// コントラクトからゾンビ詳細を探し、`zombie`オブジェクトを返す。
+getZombieDetails(id)
+.then(function(zombie) {
+  // ES6の「テンプレート文字列」を使い、HTMLに変数をインジェクト。
+  // それぞれを #zombies div に追加
+  $("#zombies").append(`<div class="zombie">
+    <ul>
+      <li>Name: ${zombie.name}</li>
+      <li>DNA: ${zombie.dna}</li>
+      <li>Level: ${zombie.level}</li>
+      <li>Wins: ${zombie.winCount}</li>
+      <li>Losses: ${zombie.lossCount}</li>
+      <li>Ready Time: ${zombie.readyTime}</li>
+    </ul>
+  </div>`);
+  
+  ・画像として表示
+  // ゾンビの頭を表す1-7の整数を取得:
+var head = parseInt(zombie.dna.substring(0, 2)) % 7 + 1
+
+// 連続した数字のファイル名を持つ７つの頭の画像がある:
+var headSrc = "../assets/zombieparts/head-" + head + ".png"
+
+
+
+・トランザクションの送信（Send）
+スマートコントラクト上のデータを変更するためのsendの使用。
+
+call関数とはいくつか大きな違いがある:
+
+トランザクションをsendするのには関数を呼び出す者のfromアドレスが必要
+(Solidityのコードではmsg.senderとなる)。
+これがDAppのユーザーであるようにしたいから、彼らにトランザクションへの署名を要求するようMetamaskがポップアップする。
+
+トランザクションをsendするにはガスがかかる
+
+ユーザーがトランザクションをsendしてから、それが実際にブロックチェーン上で有効になるまでにはかなりの遅れがある。 
+この原因は、トランザクションがブロックに含まれるのを待つ必要があり、
+またイーサリアムのブロック生成時間が平均15秒であるからだ。
+イーサリアム上にたくさん保留中トランザクションがある場合や、
+ユーザーがあまりに低いガスプライスを送信した場合は、
+トランザクションが取り込まれるまで数ブロック待たなければならず、数分かかることもある。
+
+このため、コードの非同期性を処理するためのロジックがアプリケーションで必要となる。
+
+Ex.
+function createRandomZombie(name) {
+  // しばらく時間がかかるので、UIを更新してユーザーに
+  // トランザクションが送信されたことを知らせる
+  $("#txStatus").text("Creating new zombie on the blockchain. This may take a while...");
+  // トランザクションをコントラクトに送信する:
+  return cryptoZombies.methods.createRandomZombie(name)
+  .send({ from: userAccount })
+  .on("receipt", function(receipt) {
+    $("#txStatus").text("Successfully created " + name + "!");
+    // トランザクションがブロックチェーンに取り込まれた。UIをアップデートしよう
+    getZombiesByOwner(userAccount).then(displayZombies);
+  })
+  .on("error", function(error) {
+    // トランザクションが失敗したことをユーザーに通知するために何かを行う
+    $("#txStatus").text(error);
+  });
+}
+
+
+receiptは、トランザクションがEthereumのブロックに含まれると発行される。
+これは我々のゾンビが作成され、コントラクトに保存されたことを意味する。
+errorは十分な量のガスを送っていないといったように、ブロックへのトランザクションの取り込みを妨げる問題があるときに発生する。 
+我々は、UIでトランザクションがうまくいかなかったことをユーザーに通知し、トランザクションをやり直せるようにしたい。
+
+注: sendを呼び出す場合、オプションでgasとgasPriceを指定することができます。
+(例 .send({ from: userAccount, gas: 3000000 }))
+これを指定しなければ、Metamaskがこれらの数値をユーザーに選ばせます。
 
