@@ -289,3 +289,72 @@ errorは十分な量のガスを送っていないといったように、ブロ
 (例 .send({ from: userAccount, gas: 3000000 }))
 これを指定しなければ、Metamaskがこれらの数値をユーザーに選ばせます。
 
+
+
+・Wei .. いくら送信するかを指定。
+関数と併せてEtherを送信するのはシンプルだが、一つ注意が必要だ。
+いくら送信するかをEtherではなくweiで指定しなくてはならないのだ。
+
+Weiとは?
+weiとはEtherの最小単位で、1 etherには10^18 weiがある。
+
+数えるにはゼロが多すぎるが、ラッキーなことに、Web3.jsには我々のためにこれを行ってくれる変換ユーティリティがある。
+
+// これが1 ETHをWeiに変換してくれる
+web3js.utils.toWei("1", "ether");
+
+// how to use
+以下のコードを使うと、我々のDAppではlevelUpFee = 0.001 etherと設定したので、
+ユーザーがlevelUp関数を呼び出す際に併せて0.001送信させることができる:
+
+cryptoZombies.methods.levelUp(zombieId)
+.send({ from: userAccount, value: web3js.utils.toWei("0.001", "ether") })
+
+
+
+
+// Web3.js経由でコントラクトとやり取り..
+環境設定
+関数をcall、
+そしてトランザクションをsendするのは、通常のウェブAPIと全然違う、というわけではないからな。
+
+
+// eventのサブスクライブ
+Web3.jsでは、web3プロバイダがコード中のロジックをトリガーとして引くようにイベントを サブスクライブ できる!
+
+cryptoZombies.events.NewZombie()
+.on("data", function(event) {
+  let zombie = event.returnValues;
+  // `event.returnValues`オブジェクトのこのイベントの戻り値３つにアクセスできる:
+  console.log("A new zombie was born!", zombie.zombieId, zombie.name, zombie.dna);
+}).on("error", console.error);
+
+but.. これだとそのユーザーの分だけでなく、DApp内でゾンビが作成されるたびに通知が表示されてしまう。
+そのユーザーの分だけ通知が必要な場合はどうすればよいのか？
+
+// indexed の使用
+イベントをフィルタリングして、そのユーザに関連する変更のみをリッスンするには、
+Solidityのコントラクトでは、ERC721の実装で行ったTransferイベントのようにindexedというキーワードを使用しなくてはならない:
+
+event Transfer(address indexed _from, address indexed _to, uint256 _tokenId);
+
+この場合、_fromと_toはindexedされているので、フロントエンドのイベントリスナーでそれらをフィルターすることは可能であるという意味だ:
+
+
+getPastEventsを使って過去のイベントをクエリすることや、
+fromBlock及びtoBlockのフィルターを使用してSolidityに期間を指定してイベントのログを取ることも可能だ
+("block"はこの場合イーサリアムのブロック番号である):
+Ex.
+cryptoZombies.getPastEvents("NewZombie", { fromBlock: 0, toBlock: "latest" })
+.then(function(events) {
+  // `events`は、上でやったように反復可能な`event`配列内のオブジェクトである
+  // このコードは、これまで生成された全ゾンビのリストを提供してくれる
+});
+
+ユースケース .. 安価なストレージとしてのイベントの使用。→イベントの使用はガスコストよりずっと安価。
+
+
+
+
+
+
