@@ -1,4 +1,4 @@
-// web3.js .. Ethereum FoundationのJavaScriptライブラリ
+web3.js .. Ethereum FoundationのJavaScriptライブラリ
 
 ・コントラクトの呼び出し
 イーサリアムのネットワークは、ブロックチェーンのコピーをそれぞれ持ったノードで構成されていることを思い出すのだ。
